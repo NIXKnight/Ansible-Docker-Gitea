@@ -1,2 +1,21 @@
 ---
 # tasks file for Ansible-Docker-Gitea
+- name: Add Gitea NGINX Server Block
+  template:
+    src: "templates/etc/nginx/sites-available/gitea.conf.j2"
+    dest: "/etc/nginx/sites-available/gitea.conf"
+  when: ansible_os_family == 'Debian'
+  tags:
+    - "install"
+    - "configure"
+
+- name: Enable Gitea NGINX Server Block
+  file:
+    src: "/etc/nginx/sites-available/gitea.conf"
+    dest: "/etc/nginx/sites-enabled/gitea.conf"
+    state: link
+  when: ansible_os_family == 'Debian'
+  notify: Restart NGINX
+  tags:
+    - "install"
+    - "configure"

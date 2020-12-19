@@ -1,0 +1,25 @@
+upstream gitea_upstream {
+    server {{ DOCKER_GITEA_NGINX_UPSTREAM }} fail_timeout=0;
+}
+
+server {
+  listen {{ DOCKER_GITEA_NGINX_PORT }};
+  server_name {{ DOCKER_GITEA_DOMAIN_NAME }};
+
+{% if DOCKER_GITEA_NGINX_ENABLE_SSL %}
+  listen {{ DOCKER_GITEA_NGINX_SSL_PORT }} ssl;
+  ssl_certificate {{ DOCKER_GITEA_NGINX_SSL_CERTIFICATE_FILE }};
+  ssl_certificate_key {{ DOCKER_GITEA_NGINX_SSL_KEY_FILE }};
+
+  if ($scheme != "https") { set $redirect_to_https "true"; }
+  if ($redirect_to_https = "true") { return 301 https://$host$request_uri; }
+{% endif %}
+
+  client_max_body_size 50M;
+
+  location / {
+    proxy_pass http://gitea_upstream;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+  }
+}
